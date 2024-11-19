@@ -1,11 +1,11 @@
-// Путь к файлам модели
-const modelPath = "./test-AI2/model.glb"; // Путь к модели
+// Пути к файлам модели и текстуры
+const modelPath = "./test-AI2/model.glb"; // Путь к GLB-модели
 const texturePath = "./test-AI2/gltf_embedded_0.jpeg"; // Путь к текстуре
 
 // Создаем сцену, камеру и рендерер
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 1.5, 2); // Расположение камеры
+camera.position.set(0, 1.5, 2); // Позиция камеры
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -16,14 +16,18 @@ const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(0, 2, 2).normalize();
 scene.add(light);
 
-const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Мягкое освещение
 scene.add(ambientLight);
 
 // Загрузка текстуры
 const textureLoader = new THREE.TextureLoader();
-const texture = textureLoader.load(
+let texture;
+textureLoader.load(
     texturePath,
-    () => console.log("Текстура успешно загружена."),
+    (loadedTexture) => {
+        texture = loadedTexture;
+        console.log("Текстура успешно загружена.");
+    },
     undefined,
     (error) => console.error("Ошибка загрузки текстуры:", error)
 );
@@ -37,17 +41,18 @@ loader.load(
         model = gltf.scene;
         scene.add(model);
 
-        // Настройка модели
-        model.position.set(0, -1, 0);
-        model.scale.set(1.5, 1.5, 1.5);
+        model.position.set(0, -1, 0); // Устанавливаем позицию модели
+        model.scale.set(1.5, 1.5, 1.5); // Масштаб модели
 
-        // Применение текстуры
-        model.traverse((child) => {
-            if (child.isMesh) {
-                child.material.map = texture;
-                child.material.needsUpdate = true;
-            }
-        });
+        // Применяем текстуру
+        if (texture) {
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.material.map = texture;
+                    child.material.needsUpdate = true;
+                }
+            });
+        }
 
         // Анимация, если доступна
         if (gltf.animations && gltf.animations.length > 0) {
@@ -56,7 +61,7 @@ loader.load(
             action.play();
         }
 
-        console.log("Модель загружена успешно.");
+        console.log("Модель успешно загружена.");
     },
     undefined,
     (error) => {
@@ -67,7 +72,7 @@ loader.load(
 // Анимация сцены
 function animate() {
     requestAnimationFrame(animate);
-    if (mixer) mixer.update(0.01);
+    if (mixer) mixer.update(0.01); // Обновление анимации
     renderer.render(scene, camera);
 }
 animate();
